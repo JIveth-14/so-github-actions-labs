@@ -1,0 +1,66 @@
+name: Multi-OS System Check
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  system-info:
+    name: System Info on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Collect System Info (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "=== OS ===" > system-info.txt
+          uname -a >> system-info.txt
+          echo "" >> system-info.txt
+
+          echo "=== Architecture ===" >> system-info.txt
+          uname -m >> system-info.txt
+          echo "" >> system-info.txt
+
+          echo "=== Environment Variables ===" >> system-info.txt
+          env | sort >> system-info.txt
+          echo "" >> system-info.txt
+
+          echo "=== Extra Commands ===" >> system-info.txt
+          echo "Current user: $(whoami)" >> system-info.txt
+          echo "Working dir: $(pwd)" >> system-info.txt
+
+      - name: Collect System Info (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          "=== OS ===" | Out-File system-info.txt
+          (Get-CimInstance Win32_OperatingSystem).Caption | Out-File system-info.txt -Append
+          "Version: $([System.Environment]::OSVersion.VersionString)" | Out-File system-info.txt -Append
+          "" | Out-File system-info.txt -Append
+
+          "=== Architecture ===" | Out-File system-info.txt -Append
+          $env:PROCESSOR_ARCHITECTURE | Out-File system-info.txt -Append
+          "" | Out-File system-info.txt -Append
+
+          "=== Environment Variables ===" | Out-File system-info.txt -Append
+          Get-ChildItem Env: | Sort-Object Name | Out-String | Out-File system-info.txt -Append
+          "" | Out-File system-info.txt -Append
+
+          "=== Extra Commands ===" | Out-File system-info.txt -Append
+          "Current user: $env:USERNAME" | Out-File system-info.txt -Append
+          "Working dir: $(Get-Location)" | Out-File system-info.txt -Append
+
+      - name: Upload System Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-info-${{ matrix.os }}
+          path: system-info.txt
