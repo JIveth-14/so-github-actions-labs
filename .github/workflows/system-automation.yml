@@ -1,0 +1,65 @@
+name: System Automation Demo
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  linux-automation:
+    runs-on: ubuntu-latest
+    env:
+      MESSAGE: "Hola desde job Linux"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x scripts/linux-automation.sh
+
+      - name: Run Linux automation script
+        env:
+          SECRET_EXAMPLE: ${{ secrets.SECRET_EXAMPLE }}
+          FORCE_ERROR: "0"
+        run: |
+          ./scripts/linux-automation.sh
+
+      - name: List generated files
+        run: ls -la
+
+      - name: Upload artifacts from Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: |
+            output-linux.txt
+            background-log.txt
+        if: always()
+
+  windows-automation:
+    runs-on: windows-latest
+    env:
+      MESSAGE: "Hola desde job Windows"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Windows automation script
+        env:
+          SECRET_EXAMPLE: ${{ secrets.SECRET_EXAMPLE }}
+        run: |
+          pwsh ./scripts/windows-automation.ps1
+        shell: pwsh
+
+      - name: List generated files
+        run: dir
+        shell: pwsh
+
+      - name: Upload artifacts from Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            output-windows.txt
+            background-log.txt
+        if: always()

@@ -1,0 +1,50 @@
+name: Docker Container Action Demo
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  docker-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker (ya viene instalado en ubuntu-latest)
+        run: docker version
+
+      - name: Build Docker image
+        run: |
+          docker build -t so-cicd-demo:latest .
+
+      - name: Run container and communicate with host
+        run: |
+          echo "Mensaje del host → contenedor"
+          docker run --rm \
+            -e MESSAGE_FROM_HOST="Hola desde el runner de GitHub" \
+            so-cicd-demo:latest
+
+      - name: Start container in background for monitoring
+        id: start_container
+        run: |
+          CONTAINER_ID=$(docker run -d \
+            -e MESSAGE_FROM_HOST="Contenedor para monitoreo" \
+            so-cicd-demo:latest)
+          echo "container_id=$CONTAINER_ID" >> $GITHUB_OUTPUT
+
+      - name: Monitor container resources (docker stats)
+        run: |
+          echo "Monitoreando recursos del contenedor (3 samples):"
+          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+          sleep 3
+          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+          sleep 3
+          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+
+      - name: Stop container
+        if: always()
+        run: |
+          docker stop ${{ steps.start_container.outputs.container_id }} || true

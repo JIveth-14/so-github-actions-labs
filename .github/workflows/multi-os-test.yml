@@ -43,6 +43,7 @@ jobs:
         shell: pwsh
         run: |
           "=== OS ===" | Out-File system-info.txt
+          
           (Get-CimInstance Win32_OperatingSystem).Caption | Out-File system-info.txt -Append
           "Version: $([System.Environment]::OSVersion.VersionString)" | Out-File system-info.txt -Append
           "" | Out-File system-info.txt -Append
