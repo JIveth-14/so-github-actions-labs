@@ -2,27 +2,58 @@ Param(
   [switch]$ForceError
 )
 
+# No detengas el script por errores no críticos
+$ErrorActionPreference = "Continue"
+
 Write-Host "=== Windows automation script ==="
 
+# Workspace del repo en el runner
+$workspace = $env:GITHUB_WORKSPACE
+if (-not $workspace) {
+  $workspace = (Get-Location).Path
+}
+Write-Host "Workspace: $workspace"
+
+# Rutas de archivos (en la raíz del repo)
+$outputFile     = Join-Path $workspace "output-windows.txt"
+$backgroundFile = Join-Path $workspace "background-log.txt"
+
+# 1. Variables de entorno
 Write-Host "ENV MESSAGE: $env:MESSAGE"
 Write-Host "ENV SECRET_EXAMPLE: $env:SECRET_EXAMPLE"
 
-"Hola desde PowerShell script" | Out-File -FilePath output-windows.txt -Encoding utf8
-Write-Host "Contenido de output-windows.txt:"
-Get-Content .\output-windows.txt
+# 2. Leer / escribir archivos
+"Hola desde PowerShell script" | Out-File -FilePath $outputFile -Encoding utf8
 
+Write-Host "Contenido de output-windows.txt:"
+Get-Content $outputFile
+
+# 3. Permisos de archivos (icacls) - no romper si falla
 Write-Host "Asignando permisos a output-windows.txt (lectura/escritura para el usuario actual)"
 $User = "$env:USERNAME"
-icacls .\output-windows.txt /grant "$User:(R,W)" | Out-Null
-icacls .\output-windows.txt
+try {
+  icacls $outputFile /grant "$User:(R,W)" | Out-Null
+} catch {
+  Write-Warning "icacls falló: $($_.Exception.Message)"
+}
+icacls $outputFile
 
+# 4. Proceso en segundo plano que escribe en background-log.txt
 Write-Host "Lanzando proceso en segundo plano..."
 $job = Start-Job -ScriptBlock {
-  Start-Sleep -Seconds 10
-  "Background job completado" | Out-File -FilePath background-log.txt -Encoding utf8
-}
-Write-Host "Job Id: $($job.Id)"
+  param($filePath)
+  Start-Sleep -Seconds 3
+  "Background job completado" | Out-File -FilePath $filePath -Encoding utf8
+} -ArgumentList $backgroundFile
 
+Wait-Job $job | Out-Null
+Receive-Job $job | Out-Null
+Remove-Job $job
+
+Write-Host "Contenido de background-log.txt:"
+Get-Content $backgroundFile
+
+# 5. Error controlado opcional
 if ($ForceError) {
   Write-Error "Se forzó un error desde PowerShell"
   exit 1
