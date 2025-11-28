@@ -29,7 +29,7 @@ Get-Content "output-windows.txt"
 Write-Host "Asignando permisos a output-windows.txt (lectura/escritura para el usuario actual)"
 $User = "$env:USERNAME"
 try {
-  icacls "output-windows.txt" /grant "$User:(R,W)" | Out-Null
+  icacls "output-windows.txt" /grant "$($User):(R,W)" | Out-Null 
 } catch {
   Write-Warning "icacls falló: $($_.Exception.Message)"
 }
