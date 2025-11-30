@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "cobertura": "vitest run --coverage",
-    "coverage": "npm run cob ertura",
+    "coverage": "npm run cobertura",
     "lint": "eslint .",
     "scan:deps": "npm audit --audit-level=high",
     "scan:vuln": "npm audit --production --audit-level=moderate"

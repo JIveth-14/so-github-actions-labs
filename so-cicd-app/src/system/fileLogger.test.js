@@ -1,6 +1,7 @@
 /* eslint-env node */
 /* global process */
 
+// so-cicd-app/src/system/fileLogger.test.js
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it, expect } from 'vitest';

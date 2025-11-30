@@ -16,8 +16,10 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        // Entorno navegador para React
+        // Entorno navegador (para React)
         ...globals.browser,
+        // Entorno Node (para fileLogger, tests, etc.)
+        ...globals.node,
       },
     },
     plugins: {
