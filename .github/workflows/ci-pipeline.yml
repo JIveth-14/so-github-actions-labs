@@ -1,0 +1,70 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [principal, main]
+  pull_request:
+    branches: [principal, main]
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} (Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: so-cicd-app/package-lock.json
+
+      # 🛠 Dependencias específicas por SO (ejemplos)
+      - name: Install OS specific tools (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y tree
+
+      - name: Install OS specific tools (macOS)
+        if: runner.os == 'macOS'
+        run: brew install tree
+
+      - name: Install OS specific tools (Windows)
+        if: runner.os == 'Windows'
+        run: choco install tree -y
+
+      # 📦 Instalar dependencias del proyecto
+      - name: Install dependencies
+        working-directory: ./so-cicd-app
+        run: npm ci
+
+      # ✅ Linter
+      - name: Run linter
+        working-directory: ./so-cicd-app
+        run: npm run lint
+
+      # 🧪 Tests
+      - name: Run tests
+        working-directory: ./so-cicd-app
+        run: npm test
+
+      # 📊 Coverage (solo en Linux para no duplicar artefactos)
+      - name: Generate coverage report (Linux only)
+        if: runner.os == 'Linux'
+        working-directory: ./so-cicd-app
+        run: npm run cobertura
+
+      - name: Upload coverage to artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: so-cicd-app/coverage
