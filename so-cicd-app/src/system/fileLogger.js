@@ -1,11 +1,9 @@
 /* eslint-env node */
 /* global process */
 
-// so-cicd-app/src/system/fileLogger.js
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Carpeta base = raíz del proyecto (so-cicd-app)
 const BASE_DIR = process.cwd();
 const LOG_DIR = path.join(BASE_DIR, 'logs');
 const LOG_FILE = path.join(LOG_DIR, 'app.log');
