@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "cobertura": "vitest run --coverage",
     "lint": "eslint ."
   },
   "dependencies": {
