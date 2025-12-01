@@ -1,7 +1,4 @@
-/* eslint-env node */
-/* global process */
 
-// so-cicd-app/src/system/fileLogger.test.js
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it, expect } from 'vitest';
@@ -18,7 +15,6 @@ describe('processTextFile', () => {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
 
-    // Creamos un archivo con 3 líneas no vacías
     fs.writeFileSync(TMP_FILE, 'a\nb\n\nc\n', 'utf8');
 
     const result = processTextFile(TMP_FILE);
